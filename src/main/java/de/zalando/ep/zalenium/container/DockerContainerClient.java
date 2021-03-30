@@ -268,12 +268,16 @@ public class DockerContainerClient implements ContainerClient {
                 logger.error(nodeId + " A downloaded docker-selenium image was not found!");
                 return imageName;
             }
-            for (int i = images.size() - 1; i >= 0; i--) {
-                if (images.get(i).repoTags() == null) {
-                    images.remove(i);
+
+            images = images.stream().filter(image -> {
+                if (image.repoTags() != null) {
+                    return image.repoTags().contains(imageName);
                 }
-            }
+                return false;
+            }).collect(Collectors.toList());
+
             images.sort((o1, o2) -> o2.created().compareTo(o1.created()));
+
             return images.get(0).repoTags().get(0);
         } catch (DockerException | InterruptedException e) {
             logger.warn(nodeId + " Error while executing the command", e);
